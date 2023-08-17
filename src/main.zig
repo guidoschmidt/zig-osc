@@ -1,39 +1,7 @@
 const std = @import("std");
 const network = @import("network");
 
-pub const OscServer = struct {
-    const Self = @This();
-
-    socket: network.Socket = undefined,
-    port_number: u16 = 7777,
-    comptime buffer_size: u32 = 4096,
-
-    pub fn serve(self: *Self, _: std.mem.Allocator) !void {
-        try network.init();
-        self.socket = try network.Socket.create(.ipv4, .udp);
-        try self.socket.enablePortReuse(true);
-        const incoming_endpoint = network.EndPoint{
-            .address = network.Address{ .ipv4 = network.Address.IPv4.multicast_all },
-            .port = self.port_number,
-        };
-        self.socket.bind(incoming_endpoint) catch |err| {
-            std.log.err("Failed to bind to {}\n{}", .{ incoming_endpoint, err });
-        };
-        std.log.info("Serving on {}\n", .{ incoming_endpoint });
-        var buffer: [self.buffer_size]u8 = undefined;
-        var reader = self.socket.reader();
-        while(true) {
-            std.debug.print(">> Serving on port {}\n", .{ self.port_number });
-            const bytes = try reader.read(buffer[0..buffer.len]);
-            std.debug.print(">> {s}\n", .{ buffer[0..bytes] });
-        }
-    }
-
-    pub fn close(self: *Self) void {
-        defer self.socket.close();
-        defer network.deinit();
-    }
-};
+pub const OscServer = @import("OscServer.zig");
 
 pub const OscClient = struct {
     const Self = @This();
@@ -41,7 +9,7 @@ pub const OscClient = struct {
     socket: network.Socket = undefined,
     destAddress: network.EndPoint = undefined,
 
-    pub fn connect(self: *Self) !void {
+    pub fn connect(self: *Self, port: u16) !void {
         try network.init();
 
         self.socket = try network.Socket.create(.ipv4, .udp);
@@ -54,7 +22,7 @@ pub const OscClient = struct {
 
         self.destAddress = network.EndPoint{
             .address = network.Address{ .ipv4 = network.Address.IPv4.multicast_all },
-            .port = 7777
+            .port = port
         };
         try self.socket.bind(bindAddress);
     }
@@ -82,7 +50,7 @@ pub const OscMessage = struct {
 
     address: []const u8,
     type_tag: OscTypeTag = .i32,
-    arguments: [*]OscArgument = undefined,
+    arguments: []OscArgument = undefined,
     argument_count: usize = 0,
 
     pub fn addArguments(self: *Self, arguments: [*]OscArgument, argument_count: usize) void {
@@ -102,6 +70,42 @@ pub const OscMessage = struct {
         }
     }
 
+    pub fn from(buffer: []u8, allocator: std.mem.Allocator) OscMessage {
+        var i: u16 = 0;
+        while(i < buffer.len and buffer[i] != ',') {
+            i += 1;
+        }
+        var j: u16 = 0;
+        while(j < buffer.len) : (j += 4) {}
+        const address_length = i;
+        var argument_count: u16 = 0;
+        i += 1;
+        while(i < buffer.len and buffer[i] != 0) : (i += 1) {
+            var tag_type = buffer[i]; 
+            switch(tag_type) {
+                'i' => |_| {
+                    argument_count += 1;
+                },
+                'f' => |_| {
+                    argument_count += 1;
+                },
+                else => |_| std.debug.print("", .{}), 
+            }
+        }
+        while(i < buffer.len) : (i += 1) {}
+        var osc_arguments: []OscArgument = allocator.alloc(OscArgument, argument_count) catch {
+            std.log.err("Could not allocate memory", .{});
+            return OscMessage{
+                .address = ""
+            };
+        };
+        var msg = OscMessage{
+            .address = buffer[0..address_length],
+            .arguments = osc_arguments
+        };
+        return msg;
+    }
+
     pub fn toPacket(self: *const Self, allocator: std.mem.Allocator) []u8 {
         const div_address = @ceil(@as(f32, @floatFromInt(self.address.len)) / 4.0);
         const address_length: u32 = @as(u32, @intFromFloat(div_address)) * 4;
@@ -115,10 +119,6 @@ pub const OscMessage = struct {
             return &errbuff;
         };
         const term = 0;
-        std.debug.print("\nBuffer: {any} [{}, {}, {}]", .{ buffer.len,
-                                                          address_length,
-                                                          args_length,
-                                                          args_length });
         for(0..self.address.len) |i| {
             buffer[i] = self.address[i];
         }
@@ -143,7 +143,6 @@ pub const OscMessage = struct {
         for(0..self.argument_count) |i| {
             const argument = self.arguments[i];
             idx = @intCast(argument_offset + i * 4);
-            std.debug.print("\n{d}", .{idx});
             switch(argument) {
                 .i => |v| {
                     buffer[idx + 0] = @intCast((v >> 24) & 0xFF);
@@ -160,11 +159,6 @@ pub const OscMessage = struct {
                 }
             }
         }
-        var i: u32 = 0;
-        while(i < buffer.len) : (i += 4) {
-            std.debug.print("\n{s}", .{ buffer[i..i+4] });
-        }
-        std.debug.print("\n{s}", .{ buffer });
         return buffer;
     }
 };
@@ -187,8 +181,8 @@ pub const OscArgument = union(OscArgumentType) {
         _ = options;
         _ = fmt;
         switch(self) {
-            .f => |s| try writer.print("{d:.3}", .{ s }),
-            .i => |s| try writer.print("{d}", .{ s }),
+            .f => |s| try writer.print("f {d:.3}", .{ s }),
+            .i => |s| try writer.print("i {d}", .{ s }),
         }
     }
 };
@@ -203,7 +197,20 @@ const OscTypeTag = enum {
 test "simple test" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
-    _ = allocator;
     var client = OscClient{};
     try client.connect();
+
+    var args: [1]OscArgument = undefined;
+    args[0] = .{ .i = 31419 };
+    const address = "/test";
+    const msg = OscMessage {
+        .address = address,
+        .arguments = &args,
+        .argument_count = args.len,
+    };
+    const byte_buffer = msg.toPacket(allocator);
+    std.debug.print("{s}\n", .{byte_buffer});
+
+    var parsed_msg = OscMessage.from(byte_buffer, allocator);
+    std.debug.print("\n\n{?}", .{ parsed_msg });
 }

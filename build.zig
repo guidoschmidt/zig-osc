@@ -52,6 +52,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize
     });
     tests.addModule("osc", module_osc);
+    tests.addModule("network", module_network);
     const run_tests = b.addRunArtifact(tests);
     const test_step = b.step("test", "Run tests");
     test_step.dependOn(&run_tests.step);
