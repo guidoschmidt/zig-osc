@@ -8,13 +8,9 @@ const OscRecord = struct {
     address: []const u8,
     args: []const zosc.Argument,
 
-    pub fn format(self: OscRecord,
-                  comptime _: []const u8,
-                  _: std.fmt.FormatOptions,
-                  writer: anytype) !void {
+    pub fn format(self: OscRecord, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
         try writer.print("{d}, {s}, {any}", .{ self.time, self.address, self.args });
     }
-
 };
 
 const Recorder = struct {
@@ -31,23 +27,20 @@ const Recorder = struct {
             }
         };
 
-        const instance = Recorder {
-            .recording = std.ArrayList(OscRecord).init(allocator),
-            .osc_subscriber = zosc.Subscriber {
-                .id = "recorder",
-                .onNextFn = impl.onNext,
-            }
-        };
+        const instance = Recorder{ .recording = std.ArrayList(OscRecord).init(allocator), .osc_subscriber = zosc.Subscriber{
+            .id = 0,
+            .onNextFn = impl.onNext,
+        } };
         return instance;
     }
 
     pub fn recordOscMessage(self: *Recorder, msg: *const zosc.Message) void {
-        self.recording.append(OscRecord {
+        self.recording.append(OscRecord{
             .time = std.time.timestamp(),
             .address = msg.address,
             .args = msg.arguments,
         }) catch |err| {
-            std.debug.print("Could not append OSC message to recording: {any}", .{ err });
+            std.debug.print("Could not append OSC message to recording: {any}", .{err});
         };
         if (self.recording.items.len > self.recording_length) {
             server.kill();
@@ -56,7 +49,7 @@ const Recorder = struct {
 
     pub fn saveAndDeinit(self: *Recorder) void {
         const filename = "recording.osc";
-        std.debug.print("\nSave recording file {s}...", .{ filename });
+        std.debug.print("\nSave recording file {s}...", .{filename});
         const file = std.fs.cwd().createFile(filename, .{}) catch {
             @panic("Could not write recording file!");
         };
@@ -64,7 +57,7 @@ const Recorder = struct {
         var line_buffer: [128]u8 = undefined;
         for (0..self.recording.items.len) |i| {
             const record = self.recording.items[i];
-            const line = std.fmt.bufPrint(&line_buffer, "{any}\n", .{ record }) catch {
+            const line = std.fmt.bufPrint(&line_buffer, "{any}\n", .{record}) catch {
                 @panic("Could not use bufPrint!");
             };
             _ = file_writer.write(line) catch {
@@ -82,7 +75,7 @@ pub fn main() !void {
     try zosc.init();
     defer zosc.deinit();
 
-    server  = zosc.Server{
+    server = zosc.Server{
         .port = 7001,
     };
     try server.init(allocator);

@@ -1,6 +1,7 @@
 const std = @import("std");
 const zosc = @import("zosc");
 
+const l = std.log.scoped(.@"zosc-example-server");
 pub const io_mode = .evented;
 
 var server: zosc.Server = undefined;
@@ -8,7 +9,7 @@ var server: zosc.Server = undefined;
 const ExampleSub = struct {
     osc_subscriber: zosc.Subscriber = undefined,
 
-    pub fn init(topic: []const u8) ExampleSub {
+    pub fn init(id: usize, topic: []const u8) ExampleSub {
         const impl = struct {
             pub fn onNext(ptr: *zosc.Subscriber, msg: *const zosc.Message) void {
                 const self: *ExampleSub = @fieldParentPtr("osc_subscriber", ptr);
@@ -16,13 +17,11 @@ const ExampleSub = struct {
             }
         };
 
-        return ExampleSub {
-            .osc_subscriber = zosc.Subscriber {
-                .id = "unique-id",
-                .topic = topic,
-                .onNextFn = impl.onNext,
-            }
-        };
+        return ExampleSub{ .osc_subscriber = zosc.Subscriber{
+            .id = id,
+            .topic = topic,
+            .onNextFn = impl.onNext,
+        } };
     }
 
     pub fn subscribe(self: *ExampleSub, publisher: *zosc.Server) !void {
@@ -30,7 +29,7 @@ const ExampleSub = struct {
     }
 
     pub fn handleOscMessage(self: *ExampleSub, msg: *const zosc.Message) void {
-        std.log.info("\n{any}\n    -> {any}", .{ self, msg });
+        l.info("\n{any}\n    -> {any}", .{ self, msg });
     }
 };
 
@@ -47,8 +46,14 @@ pub fn main() !void {
     };
     try server.init(allocator);
 
-    var osc_sub = ExampleSub.init("/ch/1");
+    var osc_sub = ExampleSub.init(0, "/ch/1");
     try osc_sub.subscribe(&server);
+
+    var osc_sub_2 = ExampleSub.init(1, "/red");
+    try osc_sub_2.subscribe(&server);
+
+    l.info("{any}", .{osc_sub});
+    l.info("{any}", .{osc_sub_2});
 
     try server.serve();
 }

@@ -3,11 +3,13 @@ const network = @import("network");
 const OscSubscriber = @import("OscSubscriber.zig");
 const Allocator = std.mem.Allocator;
 
+const l = std.log.scoped(.OscServer);
+
 const OscMessage = @import("./OscMessage.zig");
 
 const OscServer = @This();
 
-subscribers: std.StringHashMap(*OscSubscriber) = undefined,
+subscribers: std.AutoHashMap(usize, *OscSubscriber) = undefined,
 
 allocator: std.mem.Allocator = undefined,
 port: u16 = 7777,
@@ -17,7 +19,7 @@ active: bool = true,
 
 pub fn init(self: *OscServer, allocator: Allocator) !void {
     self.allocator = allocator;
-    self.subscribers = std.StringHashMap(*OscSubscriber).init(allocator);
+    self.subscribers = std.AutoHashMap(usize, *OscSubscriber).init(allocator);
 
     self.socket = try network.Socket.create(.ipv4, .udp);
     try self.socket.enablePortReuse(true);
@@ -26,7 +28,7 @@ pub fn init(self: *OscServer, allocator: Allocator) !void {
         .port = self.port,
     };
     self.socket.bind(incoming_endpoint) catch |err| {
-        std.log.err("[OscServer] Failed to bind to {s}\n{any}", .{ incoming_endpoint, err });
+        l.err("[OscServer] Failed to bind to {s}\n{any}", .{ incoming_endpoint, err });
     };
 }
 
@@ -40,7 +42,7 @@ pub fn unsubscribe(self: *OscServer, id: []const u8) void {
 
 fn next(self: *OscServer, msg: *const OscMessage) void {
     var val_it = self.subscribers.valueIterator();
-    while(val_it.next()) |sub| {
+    while (val_it.next()) |sub| {
         if (sub.*.topic) |topic| {
             // @TODO impl. partial match or even regex, e.g. /topic1/*/velocity
             if (std.mem.containsAtLeast(u8, msg.address, 1, topic)) {
@@ -53,14 +55,14 @@ fn next(self: *OscServer, msg: *const OscMessage) void {
 }
 
 pub fn serve(self: *OscServer) !void {
-    std.log.info("\n[OscServer] Serving on port {}", .{ self.port });
+    l.info("\n[OscServer] Serving on port {}", .{self.port});
 
     defer self.subscribers.deinit();
 
     var reader = self.socket.reader();
     var buffer: [self.buffer_size]u8 = undefined;
     self.active = true;
-    while(true) {
+    while (true) {
         if (!self.active) break;
         const bytes = try reader.read(buffer[0..buffer.len]);
         if (bytes > 0) {
@@ -69,7 +71,7 @@ pub fn serve(self: *OscServer) !void {
         }
     }
     if (!self.active) {
-        std.debug.print("\n[OscServer] shutting down ...", .{});
+        l.info("\n[OscServer] shutting down ...", .{});
     }
 }
 
