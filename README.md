@@ -1,6 +1,6 @@
-[![CI](https://github.com/guidoschmidt/zosc/actions/workflows/build.yml/badge.svg)](https://github.com/guidoschmidt/zosc/actions/workflows/build.yml)
+[![CI](https://github.com/guidoschmidt/zig-osc/actions/workflows/build.yml/badge.svg)](https://github.com/guidoschmidt/zig-osc/actions/workflows/build.yml)
 
-# zosc
+# zig-osc
 ### Open Sound Control package for [zig](https://ziglang.org/)
 
 ### Features
