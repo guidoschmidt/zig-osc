@@ -1,5 +1,6 @@
 .{
-    .name = "zosc",
+    .name = .osc,
+    .fingerprint = 0x6c634fd8d2d068fa,
     .version = "0.0.1",
     .paths = .{
         "src",
