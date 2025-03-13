@@ -20,7 +20,7 @@ jobs:
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v1
         with:
-          version: 0.13.0
+          version: latest
 
       - name: Compile library
         run: |
