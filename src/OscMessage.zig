@@ -173,7 +173,7 @@ pub fn decode(buffer: []u8, allocator: std.mem.Allocator) !OscMessage {
         }
     }
     return OscMessage{
-        .address = address,
+        .address = try allocator.dupe(u8, address[0..]),
         .arguments = try allocator.dupe(OscArgument, arguments.items),
     };
 }

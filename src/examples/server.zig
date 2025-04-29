@@ -1,27 +1,59 @@
 const std = @import("std");
-const osc = @import("osc");
+const zosc = @import("zosc");
 
+const l = std.log.scoped(.@"zosc-example-server");
 pub const io_mode = .evented;
 
-var server: osc.Server = undefined;
+var server: zosc.Server = undefined;
 
-fn onOscReceive(msg: *const osc.Message) void {
-    std.debug.print("\n{any}", .{ msg });
-    //server.kill();
-}
+const ExampleSub = struct {
+    osc_subscriber: zosc.Subscriber = undefined,
+
+    pub fn init(id: usize, topic: []const u8) ExampleSub {
+        const impl = struct {
+            pub fn onNext(ptr: *zosc.Subscriber, msg: *const zosc.Message) void {
+                const self: *ExampleSub = @fieldParentPtr("osc_subscriber", ptr);
+                return self.handleOscMessage(msg);
+            }
+        };
+
+        return ExampleSub{ .osc_subscriber = zosc.Subscriber{
+            .id = id,
+            .topic = topic,
+            .onNextFn = impl.onNext,
+        } };
+    }
+
+    pub fn subscribe(self: *ExampleSub, publisher: *zosc.Server) !void {
+        try publisher.subscribe(&self.osc_subscriber);
+    }
+
+    pub fn handleOscMessage(self: *ExampleSub, msg: *const zosc.Message) void {
+        l.info("\n{any}\n    -> {any}", .{ self, msg });
+    }
+};
 
 pub fn main() !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
 
-    try osc.init();
-    defer osc.deinit();
+    try zosc.init();
+    defer zosc.deinit();
 
-    server = osc.Server{
+    server = zosc.Server{
         .port = 7001,
-        .on_receive = onOscReceive,
     };
-    try server.init();
-    try server.serve(allocator);
+    try server.init(allocator);
+
+    var osc_sub = ExampleSub.init(0, "/ch/1");
+    try osc_sub.subscribe(&server);
+
+    var osc_sub_2 = ExampleSub.init(1, "/red");
+    try osc_sub_2.subscribe(&server);
+
+    l.info("{any}", .{osc_sub});
+    l.info("{any}", .{osc_sub_2});
+
+    try server.serve();
 }

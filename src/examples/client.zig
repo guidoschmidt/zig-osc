@@ -1,32 +1,46 @@
 const std = @import("std");
-const osc = @import("osc");
+const zosc = @import("zosc");
+
+const l = std.log.scoped(.@"zosc-example-client");
 
 pub fn main() !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
 
-    try osc.init();
-    defer osc.deinit();
+    try zosc.init();
+    defer zosc.deinit();
 
-    var client = osc.Client{
-        .port = 7001,
-    };
-    try client.connect();
+    var client = zosc.Client{ .port = 7001, .allocator = allocator };
+    try client.connect(false, "127.0.0.1");
 
+    const msg_count: usize = 200;
     var i: usize = 0;
-    while(i < 300) {
+    var curr: i16 = -250;
+    var rot_curr: i16 = -740;
+    var zoom_curr: i16 = -740;
+    while (i < msg_count) {
+        const rot_msg = zosc.Message{ .address = "/io/0/knob/0/enc", .arguments = &[_]zosc.Argument{.{ .i = rot_curr }} };
+        try client.sendMessage(rot_msg);
+        rot_curr += 5;
+        std.time.sleep(std.time.ns_per_ms * 30);
 
-        const msg = osc.Message{
-            .address = "/ch/1",
-            .arguments = &[_]osc.Argument{
-                .{ .f = std.math.sin(@as(f32, @floatFromInt(i)) * 0.1) * 3.0 }
-            }
-        };
-        std.debug.print("\n{any}", .{ msg });
-        try client.sendMessage(msg, allocator);
+        const zoom_msg = zosc.Message{ .address = "/io/0/knob/1/enc", .arguments = &[_]zosc.Argument{.{ .i = zoom_curr }} };
+        try client.sendMessage(zoom_msg);
+        std.time.sleep(std.time.ns_per_ms * 30);
+
+        const msg = zosc.Message{ .address = "/io/0/knob/2/enc", .arguments = &[_]zosc.Argument{.{ .i = curr }} };
+        try client.sendMessage(msg);
+        l.info("\n{any}", .{msg});
+        if (i < msg_count / 2) {
+            zoom_curr -= 3;
+            curr += 1;
+        } else {
+            zoom_curr += 3;
+            curr -= 1;
+        }
 
         i += 1;
-        std.time.sleep(std.time.ns_per_ms * 16);
-    } 
+        std.time.sleep(std.time.ns_per_ms * 30);
+    }
 }

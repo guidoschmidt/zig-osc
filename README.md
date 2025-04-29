@@ -1,6 +1,6 @@
-[![CI](https://github.com/guidoschmidt/zosc/actions/workflows/build.yml/badge.svg)](https://github.com/guidoschmidt/zosc/actions/workflows/build.yml)
+[![CI](https://github.com/guidoschmidt/zig-osc/actions/workflows/build.yml/badge.svg)](https://github.com/guidoschmidt/zig-osc/actions/workflows/build.yml)
 
-# zosc
+# zig-osc
 ### Open Sound Control package for [zig](https://ziglang.org/)
 
 ### Features
@@ -12,11 +12,12 @@
   - [ ] OSC-blob
 
 ### Examples
-- `zig build exapmles-server` to run an [OSC server example](src/examples/server.zig)
-- `zig build exapmles-client` to run an [OSC client example](src/examples/client.zig), which sends a sine wave as OSC message to
-  `/ch/1`
-- Open [`vcv/receive-osc.vcv`](./vcv) in [VCV Rack 2](https://vcvrack.com/Rack)
-  to receive messages from `zig build client`
+`zig build run-*example*` to run any of the [examples](src/examples/)
+
+- `zig build run-server` example server implementation for receiving OSC messages
+- `zig build run-client` example client implementation for sending OSC messages
+- `zig build run-tracker` mini tracker application which sends OSC messages to
+  VCV Rack
 
 ### Links & References
 - [OSC Specifications](https://opensoundcontrol.stanford.edu/)

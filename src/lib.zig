@@ -5,6 +5,7 @@ pub const Message = @import("./OscMessage.zig");
 pub const Argument = Message.OscArgument;
 pub const Client = @import("./OscClient.zig");
 pub const Server = @import("./OscServer.zig");
+pub const Subscriber = @import("./OscSubscriber.zig");
 
 const Allocator = std.mem.Allocator;
 
