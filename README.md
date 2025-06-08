@@ -8,7 +8,7 @@
 - [x] OSC Arguments 
   - [x] integer, i32
   - [x] float, f32
-  - [ ] 🚧 [OSC-string](https://github.com/guidoschmidt/zig-osc/pull/3)
+  - [x] OSC-string
   - [ ] OSC-blob
 
 ### Examples
