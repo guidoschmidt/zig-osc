@@ -46,14 +46,18 @@ pub fn main() !void {
     };
     try server.init(allocator);
 
-    var osc_sub = ExampleSub.init(0, "/ch/1");
+    var osc_sub = ExampleSub.init(0, "/two/strings");
     try osc_sub.subscribe(&server);
 
-    var osc_sub_2 = ExampleSub.init(1, "/red");
-    try osc_sub_2.subscribe(&server);
+    // var osc_sub_2 = ExampleSub.init(1, "/red");
+    // try osc_sub_2.subscribe(&server);
+
+    // var osc_sub_3 = ExampleSub.init(1, "/io/0/knob/2/btn");
+    // try osc_sub_3.subscribe(&server);
 
     l.info("{any}", .{osc_sub});
-    l.info("{any}", .{osc_sub_2});
+    // l.info("{any}", .{osc_sub_2});
+    // l.info("{any}", .{osc_sub_3});
 
     try server.serve();
 }
