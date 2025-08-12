@@ -2,6 +2,7 @@
     .name = .osc,
     .fingerprint = 0x6c634fd8d2d068fa,
     .version = "0.0.2",
+    .minimum_zig_version = "0.14.1",
     .paths = .{
         "src",
         "build.zig",
