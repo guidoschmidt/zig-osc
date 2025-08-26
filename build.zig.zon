@@ -11,8 +11,8 @@
     },
     .dependencies = .{
         .network = .{
-            .url = "https://github.com/guidoschmidt/zig-network/archive/31ace69249dc0dbfd6d75aabe3af02d2f7d9c6e2.tar.gz",
-            .hash = "12205faa895f4fc5d515f6f2e849cdd88b3d8a6dc588f8e911e0a5eed4f86de91382",
+            .url = "https://github.com/guidoschmidt/zig-network/archive/b319875b80e6dcec57f6fe86c475243e3c4f8963.tar.gz",
+            .hash = "1220e1d27433034c70ed7b2d47daa60ed61b6c4d20bf9aa6af63b6c1662cefe3dab9",
         },
     },
 }
