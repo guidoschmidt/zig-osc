@@ -28,7 +28,7 @@ pub fn init(self: *OscServer, allocator: Allocator) !void {
         .port = self.port,
     };
     self.socket.bind(incoming_endpoint) catch |err| {
-        l.err("[OscServer] Failed to bind to {s}\n{any}", .{ incoming_endpoint, err });
+        l.err("[OscServer] Failed to bind to {any}\n{any}", .{ incoming_endpoint, err });
     };
 }
 

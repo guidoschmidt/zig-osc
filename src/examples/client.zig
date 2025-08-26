@@ -23,11 +23,11 @@ pub fn main() !void {
         // const rot_msg = zosc.Message{ .address = "/io/0/knob/0/enc", .arguments = &[_]zosc.Argument{.{ .i = rot_curr }} };
         // try client.sendMessage(rot_msg);
         // rot_curr += 5;
-        // std.time.sleep(std.time.ns_per_ms * 30);
+        // std.Thread.sleep(std.time.ns_per_ms * 30);
 
         // const zoom_msg = zosc.Message{ .address = "/io/0/knob/1/enc", .arguments = &[_]zosc.Argument{.{ .i = zoom_curr }} };
         // try client.sendMessage(zoom_msg);
-        // std.time.sleep(std.time.ns_per_ms * 30);
+        // std.Thread.sleep(std.time.ns_per_ms * 30);
 
         // const msg = zosc.Message{ .address = "/io/0/knob/2/enc", .arguments = &[_]zosc.Argument{.{ .i = curr }} };
         // try client.sendMessage(msg);
@@ -53,6 +53,6 @@ pub fn main() !void {
         try client.sendMessage(str_msg);
 
         i += 1;
-        std.time.sleep(std.time.ns_per_ms * 30);
+        std.Thread.sleep(std.time.ns_per_ms * 30);
     }
 }

@@ -1,16 +1,13 @@
 const std = @import("std");
 
-fn createExample(b: *std.Build,
-                 target: *const std.Build.ResolvedTarget,
-                 optimize: *const std.builtin.OptimizeMode,
-                 name: []const u8,
-                 src: []const u8,
-                 zosc_module: *std.Build.Module) void {
+fn createExample(b: *std.Build, target: *const std.Build.ResolvedTarget, optimize: *const std.builtin.OptimizeMode, name: []const u8, src: []const u8, zosc_module: *std.Build.Module) void {
     const exe = b.addExecutable(.{
         .name = name,
-        .root_source_file = b.path(src),
-        .target = target.*,
-        .optimize = optimize.*,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path(src),
+            .target = target.*,
+            .optimize = optimize.*,
+        }),
     });
 
     exe.root_module.addImport("zosc", zosc_module);
@@ -49,7 +46,6 @@ pub fn build(b: *std.Build) !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
 
-
     const examples_path = try std.fs.path.join(allocator, &.{ "src", "examples" });
     defer allocator.free(examples_path);
     const examples_dir = try std.fs.cwd().openDir(examples_path, .{ .iterate = true });
@@ -61,7 +57,13 @@ pub fn build(b: *std.Build) !void {
     }
 
     // Tests
-    const tests = b.addTest(.{ .root_source_file = b.path("./src/testing.zig"), .target = target, .optimize = optimize });
+    const tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("./src/testing.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
     const run_tests = b.addRunArtifact(tests);
     const test_step = b.step("test", "Run tests");
     test_step.dependOn(&run_tests.step);

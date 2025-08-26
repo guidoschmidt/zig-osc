@@ -11,8 +11,8 @@
     },
     .dependencies = .{
         .network = .{
-            .url = "https://github.com/MasterQ32/zig-network/archive/8db1aa2f5efdf1e2ff6dd5f5f8efe1b4f44ff978.tar.gz",
-            .hash = "12203ae90636504172540e6e0feb2881affd82768af6f0a379cb84a3f70b53705fe5",
+            .url = "https://github.com/guidoschmidt/zig-network/archive/31ace69249dc0dbfd6d75aabe3af02d2f7d9c6e2.tar.gz",
+            .hash = "12205faa895f4fc5d515f6f2e849cdd88b3d8a6dc588f8e911e0a5eed4f86de91382",
         },
     },
 }

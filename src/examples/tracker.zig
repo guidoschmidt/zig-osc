@@ -81,7 +81,7 @@ pub fn main() !void {
                     try client.sendMessage(.{ .address = ch, .arguments = &.{.{ .f = midi_note }} });
                 }
             }
-            std.time.sleep(std.time.ns_per_min / bpm);
+            std.Thread.sleep(std.time.ns_per_min / bpm);
         }
     }
 }

@@ -87,7 +87,7 @@ pub fn bufferSize(self: OscMessage) usize {
 pub fn format(self: OscMessage, comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) !void {
     _ = fmt;
     _ = options;
-    try writer.print("\n{s} [{d}]", .{ self.address, self.arguments.len });
+    try writer.print("\n{any} [{d}]", .{ self.address, self.arguments.len });
     for (0..self.arguments.len) |i| {
         try writer.print("\n + {d}", .{self.arguments[i]});
     }
@@ -143,7 +143,7 @@ pub fn decode(buffer: []u8, allocator: std.mem.Allocator) !OscMessage {
     const eof = try stream.getEndPos();
     var pos = try stream.getPos();
 
-    var arguments = std.ArrayList(OscArgument).init(allocator);
+    var arguments = std.array_list.Managed(OscArgument).init(allocator);
     defer arguments.deinit();
 
     while (pos < eof) : (pos = try stream.getPos()) {

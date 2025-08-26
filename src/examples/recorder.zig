@@ -9,14 +9,14 @@ const OscRecord = struct {
     args: []const zosc.Argument,
 
     pub fn format(self: OscRecord, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
-        try writer.print("{d}, {s}, {any}", .{ self.time, self.address, self.args });
+        try writer.print("{d}, {any}, {any}", .{ self.time, self.address, self.args });
     }
 };
 
 const Recorder = struct {
     start_time: i64 = undefined,
     osc_subscriber: zosc.Subscriber = undefined,
-    recording: std.ArrayList(OscRecord) = undefined,
+    recording: std.array_list.Managed(OscRecord) = undefined,
     recording_length: u64 = 100,
 
     pub fn init(allocator: std.mem.Allocator) !Recorder {
@@ -27,10 +27,13 @@ const Recorder = struct {
             }
         };
 
-        const instance = Recorder{ .recording = std.ArrayList(OscRecord).init(allocator), .osc_subscriber = zosc.Subscriber{
-            .id = 0,
-            .onNextFn = impl.onNext,
-        } };
+        const instance = Recorder{
+            .recording = std.array_list.Managed(OscRecord).init(allocator),
+            .osc_subscriber = zosc.Subscriber{
+                .id = 0,
+                .onNextFn = impl.onNext,
+            },
+        };
         return instance;
     }
 
@@ -53,14 +56,13 @@ const Recorder = struct {
         const file = std.fs.cwd().createFile(filename, .{}) catch {
             @panic("Could not write recording file!");
         };
-        const file_writer = file.writer();
         var line_buffer: [128]u8 = undefined;
         for (0..self.recording.items.len) |i| {
             const record = self.recording.items[i];
             const line = std.fmt.bufPrint(&line_buffer, "{any}\n", .{record}) catch {
                 @panic("Could not use bufPrint!");
             };
-            _ = file_writer.write(line) catch {
+            _ = file.write(line) catch {
                 @panic("Could not write line!");
             };
         }

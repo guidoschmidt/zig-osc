@@ -42,7 +42,7 @@ pub fn main() !void {
     defer zosc.deinit();
 
     server = zosc.Server{
-        .port = 7001,
+        .port = 8001,
     };
     try server.init(allocator);
 
