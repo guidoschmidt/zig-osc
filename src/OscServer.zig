@@ -59,14 +59,13 @@ pub fn serve(self: *OscServer) !void {
 
     defer self.subscribers.deinit();
 
-    var reader = self.socket.reader();
     var buffer: [self.buffer_size]u8 = undefined;
     self.active = true;
     while (true) {
         if (!self.active) break;
-        const bytes = try reader.read(buffer[0..buffer.len]);
-        if (bytes > 0) {
-            const osc_msg = try OscMessage.decode(buffer[0..bytes], self.allocator);
+        const len = try self.socket.receive(&buffer);
+        if (len > 0) {
+            const osc_msg = try OscMessage.decode(buffer[0..len], self.allocator);
             self.next(&osc_msg);
         }
     }
