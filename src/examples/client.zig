@@ -49,7 +49,7 @@ pub fn main() !void {
                 .{ .s = "Hallo Welt!" },
             },
         };
-        l.info("\n{any}", .{str_msg});
+        l.info("\n{f}", .{str_msg});
         try client.sendMessage(str_msg);
 
         i += 1;

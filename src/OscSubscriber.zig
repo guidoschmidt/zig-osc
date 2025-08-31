@@ -13,9 +13,7 @@ pub fn onNext(self: *OscSubscriber, msg: *const OscMessage) void {
     }
 }
 
-pub fn format(self: OscSubscriber, comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) !void {
-    _ = fmt;
-    _ = options;
+pub fn format(self: OscSubscriber, writer: *std.Io.Writer) !void {
     try writer.print("OscSubscriber {d}", .{self.id});
     try writer.print("\n{s}", .{self.topic.?});
 }

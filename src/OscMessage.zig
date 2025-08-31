@@ -37,9 +37,7 @@ pub const OscArgument = union(OscArgumentType) {
         self.s = s;
     }
 
-    pub fn format(self: OscArgument, comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) !void {
-        _ = options;
-        _ = fmt;
+    pub fn format(self: OscArgument, writer: *std.Io.Writer) !void {
         switch (self) {
             .f => |s| try writer.print("f {d:.3}", .{s}),
             .i => |s| try writer.print("i {d}", .{s}),
@@ -84,12 +82,10 @@ pub fn bufferSize(self: OscMessage) usize {
     return size;
 }
 
-pub fn format(self: OscMessage, comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) !void {
-    _ = fmt;
-    _ = options;
-    try writer.print("\n{any} [{d}]", .{ self.address, self.arguments.len });
+pub fn format(self: OscMessage, writer: *std.Io.Writer) !void {
+    try writer.print("\n{s} [{d}]", .{ self.address, self.arguments.len });
     for (0..self.arguments.len) |i| {
-        try writer.print("\n + {d}", .{self.arguments[i]});
+        try writer.print("\n + {f}", .{self.arguments[i]});
     }
 }
 

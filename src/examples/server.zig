@@ -29,7 +29,11 @@ const ExampleSub = struct {
     }
 
     pub fn handleOscMessage(self: *ExampleSub, msg: *const zosc.Message) void {
-        l.info("\n{any}\n    -> {any}", .{ self, msg });
+        l.info("\n{f}\n    -> {f}", .{ self, msg });
+    }
+
+    pub fn format(self: ExampleSub, writer: *std.Io.Writer) std.Io.Writer.Error!void {
+        try writer.print("{f}", .{self.osc_subscriber});
     }
 };
 
@@ -55,7 +59,7 @@ pub fn main() !void {
     // var osc_sub_3 = ExampleSub.init(1, "/io/0/knob/2/btn");
     // try osc_sub_3.subscribe(&server);
 
-    l.info("{any}", .{osc_sub});
+    l.info("{f}", .{osc_sub});
     // l.info("{any}", .{osc_sub_2});
     // l.info("{any}", .{osc_sub_3});
 
